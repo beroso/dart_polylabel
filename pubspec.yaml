@@ -1,0 +1,13 @@
+name: polylabel
+description: Dart port of https://github.com/mapbox/polylabel.
+version: 0.1.0
+repository: https://github.com/beroso/dart_polylabel
+
+environment:
+  sdk: '>=2.14.4 <3.0.0'
+
+dev_dependencies:
+  lints: ^1.0.0
+  test: ^1.16.0
+dependencies: 
+  collection: ^1.15.0
