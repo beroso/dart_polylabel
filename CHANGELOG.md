@@ -1,3 +1,8 @@
+## 1.0.0
+
+- Changed PolylabelResult structure.
+- Add unit tests.
+
 ## 0.3.1
 
 - Refactor code.
