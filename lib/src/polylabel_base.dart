@@ -1,30 +1,9 @@
-import 'dart:math' show min, sqrt, sqrt2, Point;
+import 'dart:math' show min, Point;
 import 'package:collection/collection.dart';
 
-typedef Polygon = List<List<Point>>;
+import 'data.dart';
 
-class Cell {
-  final Point c; // cell center
-  final num h; // half the cell size
-  final num d; // distance from cell center to polygon
-  late num max; // max distance to polygon within a cell
-
-  Cell(this.c, this.h, Polygon polygon) : d = pointToPolygonDist(c, polygon) {
-    max = d + h * sqrt2;
-  }
-}
-
-class PolylabelResult {
-  final num x;
-  final num y;
-  final num distance;
-  PolylabelResult(this.x, this.y, this.distance);
-}
-
-/// Finds the polygon pole of inaccessibility, the most distant internal point
-/// from the polygon outline (not to be confused with centroid).
-///
-/// Useful for optimal placement of a text label on a polygon.
+/// Finds the polygon pole of inaccessibility.
 PolylabelResult polylabel(
   List<List<Point>> polygon, {
   double precision = 1.0,
@@ -50,7 +29,7 @@ PolylabelResult polylabel(
   }
 
   // a priority queue of cells in order of their "potential" (max distance to polygon)
-  final cellQueue = PriorityQueue<Cell>(compareMax);
+  final cellQueue = PriorityQueue<Cell>((a, b) => b.max.compareTo(a.max));
 
   // cover polygon with initial cells
   for (var x = minX; x < maxX; x += cellSize) {
@@ -60,7 +39,7 @@ PolylabelResult polylabel(
   }
 
   // take centroid as the first best guess
-  var bestCell = getCentroidCell(polygon);
+  var bestCell = _getCentroidCell(polygon);
 
   // second guess: bounding box centroid
   var bboxCell = Cell(Point(minX + width / 2, minY + height / 2), 0, polygon);
@@ -101,37 +80,8 @@ PolylabelResult polylabel(
   return PolylabelResult(bestCell.c.x, bestCell.c.y, bestCell.d);
 }
 
-/// Compare two cells
-int compareMax(Cell a, Cell b) {
-  return (b.max - a.max).toInt();
-}
-
-/// Signed distance from point to polygon outline (negative if point is outside)
-num pointToPolygonDist(Point point, Polygon polygon) {
-  bool inside = false;
-  num minDistSq = double.infinity;
-
-  for (var k = 0; k < polygon.length; k++) {
-    final ring = polygon[k];
-
-    for (var i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
-      final a = ring[i];
-      final b = ring[j];
-
-      if ((a.y > point.y != b.y > point.y) &&
-          (point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)) {
-        inside = !inside;
-      }
-
-      minDistSq = min(minDistSq, getSegDistSq(point, a, b));
-    }
-  }
-
-  return minDistSq == 0 ? 0 : (inside ? 1 : -1) * sqrt(minDistSq);
-}
-
 /// Get polygon centroid
-Cell getCentroidCell(Polygon polygon) {
+Cell _getCentroidCell(Polygon polygon) {
   num area = 0;
   num x = 0;
   num y = 0;
@@ -147,29 +97,4 @@ Cell getCentroidCell(Polygon polygon) {
   }
   if (area == 0) return Cell(ring[0], 0, polygon);
   return Cell(Point(x / area, y / area), 0, polygon);
-}
-
-/// Get squared distance from a point to a segment
-num getSegDistSq(Point p, Point a, Point b) {
-  num x = a.x;
-  num y = a.y;
-  num dx = b.x - x;
-  num dy = b.y - y;
-
-  if (dx != 0 || dy != 0) {
-    final t = ((p.x - x) * dx + (p.y - y) * dy) / (dx * dx + dy * dy);
-
-    if (t > 1) {
-      x = b.x;
-      y = b.y;
-    } else if (t > 0) {
-      x += dx * t;
-      y += dy * t;
-    }
-  }
-
-  dx = p.x - x;
-  dy = p.y - y;
-
-  return dx * dx + dy * dy;
 }
