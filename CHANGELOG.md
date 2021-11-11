@@ -1,5 +1,9 @@
 ## 0.3.0
 
+- Refactor code.
+
+## 0.3.0
+
 - Better package description.
 
 ## 0.2.0
