@@ -25,7 +25,7 @@ PolylabelResult polylabel(
   num h = cellSize / 2;
 
   if (cellSize == 0) {
-    return PolylabelResult(minX, minY, 0);
+    return PolylabelResult(Point(minX, minY), 0);
   }
 
   // a priority queue of cells in order of their "potential" (max distance to polygon)
@@ -77,7 +77,7 @@ PolylabelResult polylabel(
     print('best distance: ${bestCell.d}');
   }
 
-  return PolylabelResult(bestCell.c.x, bestCell.c.y, bestCell.d);
+  return PolylabelResult(bestCell.c, bestCell.d);
 }
 
 /// Get polygon centroid

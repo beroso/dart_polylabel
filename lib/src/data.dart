@@ -3,10 +3,13 @@ import 'dart:math' show min, sqrt, sqrt2, Point;
 typedef Polygon = List<List<Point>>;
 
 class PolylabelResult {
-  final num x;
-  final num y;
+  final Point point;
   final num distance;
-  PolylabelResult(this.x, this.y, this.distance);
+
+  const PolylabelResult(this.point, this.distance);
+
+  @override
+  String toString() => '$runtimeType($point, distance: $distance)';
 }
 
 class Cell {
