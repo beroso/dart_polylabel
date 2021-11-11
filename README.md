@@ -15,6 +15,8 @@ and the Flutter guide for
 
 Dart port of https://github.com/mapbox/polylabel.
 
+A fast algorithm for finding polygon pole of inaccessibility implemented as a Dart library. Useful for optimal placement of a text label on a polygon.
+
 ## Usage
 
 ```dart
