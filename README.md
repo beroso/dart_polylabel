@@ -13,7 +13,12 @@ and the Flutter guide for
 
 # polylabel
 
-[![Dart](https://github.com/beroso/dart_polylabel/actions/workflows/dart.yml/badge.svg)](https://github.com/beroso/dart_polylabel/actions/workflows/dart.yml)
+[![build](https://github.com/beroso/dart_polylabel/actions/workflows/dart.yml/badge.svg)](https://github.com/beroso/dart_polylabel/actions/workflows/dart.yml)
+[![pub package](https://img.shields.io/pub/v/polylabel.svg)](https://pub.dev/packages/polylabel)
+[![pub points](https://img.shields.io/pub/points/sentry?logo=dart)](https://pub.dev/packages/polylabel/score)
+[![popularity](https://img.shields.io/pub/popularity/polylabel?logo=dart)](https://pub.dev/packages/polylabel/score)
+[![likes](https://img.shields.io/pub/likes/polylabel?logo=dart)](https://pub.dev/packages/polylabel/score)
+
 
 Dart port of https://github.com/mapbox/polylabel.
 
