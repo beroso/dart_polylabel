@@ -4,90 +4,104 @@ import 'package:collection/collection.dart';
 import 'data.dart';
 
 /// Finds the polygon pole of inaccessibility.
+///
+/// Precision is given in "polygon point" units. Generally, a larger number
+/// means a looser acceptance threshold and thus a lower precision.
 PolylabelResult polylabel(
-  List<List<Point>> polygon, {
+  Polygon polygon, {
   double precision = 1.0,
   bool debug = false,
 }) {
-  // find the bounding box of the outer ring
-  num minX = 0, minY = 0, maxX = 0, maxY = 0;
-  for (var i = 0; i < polygon[0].length; i++) {
-    var p = polygon[0][i];
-    if (i == 0 || p.x < minX) minX = p.x;
-    if (i == 0 || p.y < minY) minY = p.y;
-    if (i == 0 || p.x > maxX) maxX = p.x;
-    if (i == 0 || p.y > maxY) maxY = p.y;
+  if (polygon.isEmpty || polygon[0].isEmpty) {
+    return _empty;
   }
 
-  num width = maxX - minX;
-  num height = maxY - minY;
-  num cellSize = min(width, height);
-  num h = cellSize / 2;
+  final ring = polygon[0];
 
+  // find the bounding box of the outer ring
+  double minX = ring[0].x, minY = ring[0].y, maxX = ring[0].x, maxY = ring[0].y;
+
+  for (int i = 0; i < ring.length; i++) {
+    final p = ring[i];
+
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+
+  final width = maxX - minX;
+  final height = maxY - minY;
+  final cellSize = min<double>(width, height);
   if (cellSize == 0) {
-    return PolylabelResult(Point(minX, minY), 0);
+    return _empty;
   }
 
   // a priority queue of cells in order of their "potential" (max distance to polygon)
   final cellQueue = PriorityQueue<Cell>((a, b) => b.max.compareTo(a.max));
 
   // cover polygon with initial cells
+  final h = cellSize / 2;
   for (var x = minX; x < maxX; x += cellSize) {
     for (var y = minY; y < maxY; y += cellSize) {
-      cellQueue.add(Cell(Point(x + h, y + h), h, polygon));
+      final dx = x + h;
+      final dy = y + h;
+      cellQueue.add(Cell(dx, dy, h, polygon));
     }
   }
 
   // take centroid as the first best guess
-  var bestCell = _getCentroidCell(polygon);
+  Cell bestCell = _getCentroidCell(polygon);
 
   // second guess: bounding box centroid
-  var bboxCell = Cell(Point(minX + width / 2, minY + height / 2), 0, polygon);
-  if (bboxCell.d > bestCell.d) bestCell = bboxCell;
-
-  int numProbes = cellQueue.length;
+  final bboxCell = Cell(minX + width / 2, minY + height / 2, 0, polygon);
+  if (bboxCell.d > bestCell.d) {
+    bestCell = bboxCell;
+  }
 
   while (cellQueue.isNotEmpty) {
     // pick the most promising cell from the queue
     final cell = cellQueue.removeFirst();
 
-    // update the best cell if we found a better one
+    // update the best cell if we found a better one (i.e maximizing the distance).
     if (cell.d > bestCell.d) {
       bestCell = cell;
       if (debug) {
         print(
-          'found best ${(1e4 * cell.d).round() / 1e4} after $numProbes probes',
+          'found best ${(1e4 * cell.d).round() / 1e4} after ${cellQueue.length} probes',
         );
       }
     }
 
     // do not drill down further if there's no chance of a better solution
-    if (cell.max - bestCell.d <= precision) continue;
+    if (cell.max - bestCell.d <= precision) {
+      continue;
+    }
 
     // split the cell into four cells
-    h = cell.h / 2;
-    cellQueue.add(Cell(Point(cell.c.x - h, cell.c.y - h), h, polygon));
-    cellQueue.add(Cell(Point(cell.c.x + h, cell.c.y - h), h, polygon));
-    cellQueue.add(Cell(Point(cell.c.x - h, cell.c.y + h), h, polygon));
-    cellQueue.add(Cell(Point(cell.c.x + h, cell.c.y + h), h, polygon));
-    numProbes += 4;
+    final h = cell.h / 2;
+    cellQueue.add(Cell(cell.x - h, cell.y - h, h, polygon));
+    cellQueue.add(Cell(cell.x + h, cell.y - h, h, polygon));
+    cellQueue.add(Cell(cell.x - h, cell.y + h, h, polygon));
+    cellQueue.add(Cell(cell.x + h, cell.y + h, h, polygon));
   }
 
   if (debug) {
     print('best distance: ${bestCell.d}');
   }
 
-  return PolylabelResult(bestCell.c, bestCell.d);
+  return PolylabelResult(Point<double>(bestCell.x, bestCell.y), bestCell.d);
 }
 
 /// Get polygon centroid
 Cell _getCentroidCell(Polygon polygon) {
-  num area = 0;
-  num x = 0;
-  num y = 0;
+  double area = 0;
+  double x = 0;
+  double y = 0;
   final ring = polygon[0];
+  final len = ring.length;
 
-  for (var i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+  for (int i = 0, j = len - 1; i < len; j = i++) {
     final a = ring[i];
     final b = ring[j];
     final f = a.x * b.y - b.x * a.y;
@@ -95,6 +109,11 @@ Cell _getCentroidCell(Polygon polygon) {
     y += (a.y + b.y) * f;
     area += f * 3;
   }
-  if (area == 0) return Cell(ring[0], 0, polygon);
-  return Cell(Point(x / area, y / area), 0, polygon);
+
+  if (area == 0) {
+    return Cell(ring[0].x, ring[0].y, 0, polygon);
+  }
+  return Cell(x / area, y / area, 0, polygon);
 }
+
+const _empty = PolylabelResult(Point<double>(0, 0), 0);

@@ -6,15 +6,16 @@ import 'package:test/test.dart';
 
 import 'fixtures/fixture_reader.dart';
 
-List<List<Point>> toPolygon(List original) {
+List<List<Point<double>>> toPolygon(List original) {
   return original
       .map((polygon) => (polygon as List)
-          .map((p) => Point(p.first as num, p.last as num))
+          .map((p) =>
+              Point((p.first as num).toDouble(), (p.last as num).toDouble()))
           .toList())
       .toList();
 }
 
-List<List<Point>> loadData(String fixtureFile) {
+List<List<Point<double>>> loadData(String fixtureFile) {
   return toPolygon(jsonDecode(fixture(fixtureFile)));
 }
 
@@ -24,9 +25,16 @@ void main() {
     final water2 = loadData('water2.json');
 
     test('finds pole of inaccessibility for water1 and precision 1', () {
-      final p = polylabel(water1, precision: 1);
-      expect(p.point, Point(3865.85009765625, 2124.87841796875));
-      expect(p.distance, 288.8493574779127);
+      final watch = Stopwatch()..start();
+
+      const N = 50;
+      for (int i = 0; i < N; ++i) {
+        final p = polylabel(water1, precision: 1);
+        expect(p.point, Point(3865.85009765625, 2124.87841796875));
+        expect(p.distance, 288.8493574779127);
+      }
+
+      print('Elapsed time for $N iterations of water1: ${watch.elapsed}');
     });
 
     test('finds pole of inaccessibility for water1 and precision 50', () {

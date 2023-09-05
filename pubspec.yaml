@@ -2,14 +2,15 @@ name: polylabel
 description: >-
   A fast algorithm for finding polygon pole of inaccessibility implemented as a Dart library. 
   Useful for optimal placement of a text label on a polygon.
-version: 1.0.1
+version: 2.0.0
 repository: https://github.com/beroso/dart_polylabel
 
 environment:
-  sdk: '>=2.13.0 <3.0.0'
+  sdk: '>=3.00.0 <4.0.0'
 
-dev_dependencies:
-  lints: ^1.0.0
-  test: ^1.16.0
 dependencies: 
   collection: ^1.15.0
+
+dev_dependencies:
+  lints: ^2.1.1
+  test: ^1.16.0
