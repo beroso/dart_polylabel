@@ -1,46 +1,52 @@
 import 'dart:math' show min, sqrt, sqrt2, Point;
 
-typedef Polygon = List<List<Point>>;
+typedef Polygon = List<List<Point<double>>>;
 
 class PolylabelResult {
-  final Point point;
-  final num distance;
+  final Point<double> point;
+  final double distance;
 
   const PolylabelResult(this.point, this.distance);
 
   @override
-  String toString() => '$runtimeType($point, distance: $distance)';
+  String toString() => 'PolylabelResult($point, distance: $distance)';
 }
 
 class Cell {
-  final Point c; // cell center
-  final num h; // half the cell size
-  final num d; // distance from cell center to polygon
-  late num max; // max distance to polygon within a cell
+  // Cell center (x, y).
+  final double x;
+  final double y;
 
-  Cell(this.c, this.h, Polygon polygon) : d = pointToPolygonDist(c, polygon) {
-    max = d + h * sqrt2;
+  final double h; // half the cell size
+  final double d; // distance from cell center to polygon
+
+  late final double max;
+
+  Cell(this.x, this.y, this.h, Polygon polygon)
+      : d = pointToPolygonDist(x, y, polygon) {
+    max = d + h * sqrt2; // max distance to polygon within a cell
   }
 }
 
 /// Signed distance from point to polygon outline (negative if point is outside)
-num pointToPolygonDist(Point point, Polygon polygon) {
+double pointToPolygonDist(final double x, final double y, Polygon polygon) {
   bool inside = false;
-  num minDistSq = double.infinity;
+  double minDistSq = double.infinity;
 
-  for (var k = 0; k < polygon.length; k++) {
+  for (int k = 0; k < polygon.length; k++) {
     final ring = polygon[k];
+    final len = ring.length;
 
-    for (var i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+    for (int i = 0, j = len - 1; i < len; j = i++) {
       final a = ring[i];
       final b = ring[j];
 
-      if ((a.y > point.y != b.y > point.y) &&
-          (point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)) {
+      if ((a.y > y != b.y > y) &&
+          (x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x)) {
         inside = !inside;
       }
 
-      minDistSq = min(minDistSq, getSegDistSq(point, a, b));
+      minDistSq = min<double>(minDistSq, getSegDistSq(x, y, a, b));
     }
   }
 
@@ -48,14 +54,19 @@ num pointToPolygonDist(Point point, Polygon polygon) {
 }
 
 /// Get squared distance from a point to a segment
-num getSegDistSq(Point p, Point a, Point b) {
-  num x = a.x;
-  num y = a.y;
-  num dx = b.x - x;
-  num dy = b.y - y;
+double getSegDistSq(
+  final double px,
+  final double py,
+  Point<double> a,
+  Point<double> b,
+) {
+  double x = a.x;
+  double y = a.y;
+  double dx = b.x - x;
+  double dy = b.y - y;
 
   if (dx != 0 || dy != 0) {
-    final t = ((p.x - x) * dx + (p.y - y) * dy) / (dx * dx + dy * dy);
+    final t = ((px - x) * dx + (py - y) * dy) / (dx * dx + dy * dy);
 
     if (t > 1) {
       x = b.x;
@@ -66,8 +77,8 @@ num getSegDistSq(Point p, Point a, Point b) {
     }
   }
 
-  dx = p.x - x;
-  dy = p.y - y;
+  dx = px - x;
+  dy = py - y;
 
   return dx * dx + dy * dy;
 }
